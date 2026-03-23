@@ -11,3 +11,4 @@ if __name__ == '__main__':
 # Test efter nøgleopdatering
 # Final test after secret update
 # Trigger from local
+# Final test after EC2 fix

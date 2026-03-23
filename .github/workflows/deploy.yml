@@ -1,3 +1,43 @@
+  GNU nanoname: Deploy to EC2
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+
+    - name: Test Flask app
+      run: python -c "from app import app; assert app is not None; print('✅ Test passed!')"
+
+    - name: Deploy to EC2
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_USER: ubuntu
+      run: |
+        echo "$SSH_PRIVATE_KEY" > key.pem
+        chmod 400 key.pem
+        ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST "
+          cd ~/app || git clone https://github.com/${{ github.repository }}.git ~/app
+          cd ~/app && git pull
+          pip3 install -r requirements.txt
+          pkill -f app.py || true
+          nohup python3 app.py > /dev/null 2>&1 &
+        " 6.2                                  .github/workflows/deploy.yml
     - name: Deploy to EC2
       env:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -22,22 +62,33 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
+    steps:
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    
+
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.12'
-    
+
     - name: Install dependencies
       run: pip install -r requirements.txt
-    
+
     - name: Test Flask app
       run: python -c "from app import app; assert app is not None; print('✅ Test passed!')"
-    
+
     - name: Deploy to EC2
       env:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
